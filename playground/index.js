@@ -89,31 +89,4 @@ ReactRegistry.registerComponent('Transparent', () => Transparent);
 
 ReactRegistry.endRegisterComponent();
 
-Navigation.setRoot(
-  {
-    drawer: [
-      {
-        tabs: [
-          {
-            stack: {
-              screen: { moduleName: 'Navigation' },
-            },
-          },
-          {
-            stack: {
-              screen: { moduleName: 'Options' },
-            },
-          },
-        ],
-      },
-      {
-        screen: { moduleName: 'Menu' },
-        options: {
-          maxDrawerWidth: 280,
-          minDrawerMargin: 64,
-        },
-      },
-    ],
-  },
-  true
-);
+// 在原生端启动页面，不需要调用 Navigation.setRoot

@@ -20,7 +20,7 @@ export default class Transparent extends Component {
   render() {
     return (
       <View style={{ flex: 1 }}>
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <View style={styles.transparent}>
             <TouchableOpacity onPress={this.log} activeOpacity={0.2} style={styles.button}>
               <Text style={styles.buttonText}>点我</Text>
