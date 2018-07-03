@@ -7,10 +7,16 @@ export default class Transparent extends Component {
   static navigationItem = {
     screenColor: '#00000000',
     passThroughTouches: true,
+    backInteractive: false,
   };
 
   constructor(props) {
     super(props);
+    this.back = this.back.bind(this);
+  }
+
+  back() {
+    this.props.navigator.pop();
   }
 
   log() {
@@ -33,6 +39,10 @@ export default class Transparent extends Component {
             <Text>{this.props.text}</Text>
             <TouchableOpacity onPress={this.log} activeOpacity={0.2} style={styles.button}>
               <Text style={styles.buttonText}>点我</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={this.back} activeOpacity={0.2} style={styles.button}>
+              <Text style={styles.buttonText}>返回</Text>
             </TouchableOpacity>
           </View>
         </View>

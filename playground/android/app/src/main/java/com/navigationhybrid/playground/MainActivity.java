@@ -28,8 +28,11 @@ public class MainActivity extends ReactAppCompatActivity {
         root.setBackgroundFragment(reactNavigation);
         Bundle props = new Bundle();
         props.putString("text", "Hello");
-        final HybridFragment transpatrent = (HybridFragment) getReactBridgeManager().createFragment("Transparent", props, null);
-        root.setContainerFragment(transpatrent);
+        ReactNavigationFragment navigationFragment = new ReactNavigationFragment();
+        final HybridFragment options = (HybridFragment) getReactBridgeManager().createFragment("Options", props, null);
+
+        navigationFragment.setRootFragment(options);
+        root.setContainerFragment(navigationFragment);
 
         setActivityRootFragment(root);
 
@@ -38,7 +41,7 @@ public class MainActivity extends ReactAppCompatActivity {
             public void run() {
                 Bundle props = new Bundle();
                 props.putString("text", "World");
-                transpatrent.setAppProperties(props);
+                options.setAppProperties(props);
             }
         }, 5000);
 

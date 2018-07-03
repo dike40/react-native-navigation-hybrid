@@ -18,6 +18,7 @@ export default class StatusBarColor extends Component {
     this.blue = this.blue.bind(this);
     this.green = this.green.bind(this);
     this.topBarStyle = this.topBarStyle.bind(this);
+    this.transparent = this.transparent.bind(this);
   }
 
   red() {
@@ -34,6 +35,10 @@ export default class StatusBarColor extends Component {
 
   topBarStyle() {
     this.props.navigator.push('TopBarStyle');
+  }
+
+  transparent() {
+    this.props.navigator.push('Transparent');
   }
 
   render() {
@@ -61,6 +66,10 @@ export default class StatusBarColor extends Component {
 
         <TouchableOpacity onPress={this.topBarStyle} activeOpacity={0.2} style={styles.button}>
           <Text style={styles.buttonText}>TopBarStyle</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={this.transparent} activeOpacity={0.2} style={styles.button}>
+          <Text style={styles.buttonText}>Transparent</Text>
         </TouchableOpacity>
       </ScrollView>
     );
