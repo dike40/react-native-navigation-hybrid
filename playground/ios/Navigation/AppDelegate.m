@@ -31,7 +31,12 @@
     HBDNavigationController *navigationNav = [[HBDNavigationController alloc] initWithRootViewController:navigation];
     CustomContainerViewController *rootViewController = [[CustomContainerViewController alloc] init];
     rootViewController.contentViewController = navigationNav;
-    rootViewController.overlayViewController = [[HBDReactBridgeManager sharedInstance] controllerWithModuleName:@"Transparent" props:nil options:nil];
+    HBDViewController *vc =  [[HBDReactBridgeManager sharedInstance] controllerWithModuleName:@"Transparent" props:@{@"text": @"Hello"} options:nil];
+    rootViewController.overlayViewController = vc;
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [vc setAppProperties:@{ @"text" : @"World"}];
+    });
    
     self.window.rootViewController = rootViewController;
     [self.window makeKeyAndVisible];
