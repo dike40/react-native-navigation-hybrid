@@ -1,10 +1,10 @@
-import { ReactRegistry, Garden, Navigation } from 'react-native-navigation-hybrid';
+import { ReactRegistry, Garden, Navigator } from 'react-native-navigation-hybrid';
 import { Image, Platform } from 'react-native';
 import React, { Component } from 'react';
 
 import { Provider } from 'react-redux';
 
-import ReactNavigation from './src/Navigation';
+import Navigation from './src/Navigation';
 import Result from './src/Result';
 import Options from './src/Options';
 import Menu from './src/Menu';
@@ -22,13 +22,16 @@ import TopBarTitleView, { CustomTitleView } from './src/TopBarTitleView';
 import TopBarStyle from './src/TopBarStyle';
 import StatusBarColor from './src/StatusBarColor';
 import Transparent from './src/Transparent';
+import HUDTest from './src/HUDText';
+import ReactModal from './src/ReactModal';
 
 Garden.setStyle({
   topBarStyle: 'dark-content',
   titleTextSize: 17,
-  // statusBarColor: '#F0FFFFFF',
+  // statusBarColor: '#0000FF',
   // topBarColor: '#F0FFFFFF',
 
+  swipeBackEnabledAndroid: true,
   topBarTintColor: '#000000',
   // titleTextColor: '#00ff00',
   titleAlignment: 'center',
@@ -51,16 +54,27 @@ Garden.setStyle({
 
 function screenWrapper(screenProvider) {
   const Screen = screenProvider();
-  return props => (
-    <Provider store={store}>
-      <Screen {...props} />
-    </Provider>
-  );
+  class ScreenWrapper extends Component {
+    componentDidMount() {
+      // 获取屏幕名称
+      const screenName = Screen.componentName;
+      console.info(`screenName:${screenName}`);
+    }
+
+    render() {
+      return (
+        <Provider store={store}>
+          <Screen {...this.props} />
+        </Provider>
+      );
+    }
+  }
+  return ScreenWrapper;
 }
 
 ReactRegistry.startRegisterComponent(screenWrapper);
 
-ReactRegistry.registerComponent('Navigation', () => ReactNavigation);
+ReactRegistry.registerComponent('Navigation', () => Navigation);
 ReactRegistry.registerComponent('Result', () => Result, { path: 'result', mode: 'modal' });
 ReactRegistry.registerComponent('Options', () => Options, { path: 'options' });
 ReactRegistry.registerComponent('Menu', () => Menu, { path: 'menu' });
@@ -86,6 +100,8 @@ ReactRegistry.registerComponent('StatusBarColor', () => StatusBarColor);
 ReactRegistry.registerComponent('TopBarStyle', () => TopBarStyle);
 
 ReactRegistry.registerComponent('Transparent', () => Transparent);
+ReactRegistry.registerComponent('HUDTest', () => HUDTest);
+ReactRegistry.registerComponent('ReactModal', () => ReactModal);
 
 ReactRegistry.endRegisterComponent();
 

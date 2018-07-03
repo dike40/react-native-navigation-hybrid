@@ -10,6 +10,7 @@ import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.graphics.drawable.DrawableCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 
 import com.facebook.react.bridge.Arguments;
@@ -26,9 +27,10 @@ import javax.annotation.Nullable;
 
 import me.listenzz.navigation.AwesomeFragment;
 import me.listenzz.navigation.BarStyle;
-import me.listenzz.navigation.BottomBar;
 import me.listenzz.navigation.DrawableUtils;
+import me.listenzz.navigation.DrawerFragment;
 import me.listenzz.navigation.FragmentHelper;
+import me.listenzz.navigation.TabBar;
 import me.listenzz.navigation.TabBarFragment;
 
 import static com.navigationhybrid.Constants.TOP_BAR_STYLE_DARK_CONTENT;
@@ -169,9 +171,9 @@ public class GardenModule extends ReactContextBaseJavaModule {
                         String barStyle = readableMap.getString("topBarStyle");
                         options.putString("topBarStyle", barStyle);
                         if (barStyle.equals("dark-content")) {
-                            fragment.getGarden().setTopBarStyle(BarStyle.DarkContent);
+                            fragment.getGarden().setStatusBarStyle(BarStyle.DarkContent);
                         } else {
-                            fragment.getGarden().setTopBarStyle(BarStyle.LightContent);
+                            fragment.getGarden().setStatusBarStyle(BarStyle.LightContent);
                         }
                     }
                 }
@@ -200,7 +202,7 @@ public class GardenModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void setTopBarColor(final String sceneId, final ReadableMap readableMap) {
-        Log.i(TAG, "setTopBarColor:" + readableMap);
+        Log.i(TAG, "setToolbarColor:" + readableMap);
         handler.post(new Runnable() {
             @Override
             public void run() {
@@ -210,28 +212,7 @@ public class GardenModule extends ReactContextBaseJavaModule {
                     if (readableMap.hasKey("topBarColor")) {
                         String topBarColor = readableMap.getString("topBarColor");
                         options.putString("topBarColor", topBarColor);
-                        fragment.getGarden().setTopBarColor(Color.parseColor(topBarColor));
-                    }
-                }
-            }
-        });
-    }
-
-    @ReactMethod
-    public void setBottomBarColor(final String sceneId, final ReadableMap readableMap) {
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (readableMap.hasKey("bottomBarColor")) {
-                    String bottomBarColor = readableMap.getString("bottomBarColor");
-                    HybridFragment fragment = findFragmentBySceneId(sceneId);
-                    if (fragment != null && fragment.getView() != null) {
-                        TabBarFragment tabBarFragment = fragment.getTabBarFragment();
-                        if (tabBarFragment != null) {
-                            BottomBar bottomBar = tabBarFragment.getBottomBar();
-                            bottomBar.setBarBackgroundColor(bottomBarColor);
-                            bottomBar.initialise();
-                        }
+                        fragment.getGarden().setToolbarColor(Color.parseColor(topBarColor));
                     }
                 }
             }
@@ -258,6 +239,27 @@ public class GardenModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+    public void setBottomBarColor(final String sceneId, final ReadableMap readableMap) {
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (readableMap.hasKey("bottomBarColor")) {
+                    String bottomBarColor = readableMap.getString("bottomBarColor");
+                    HybridFragment fragment = findFragmentBySceneId(sceneId);
+                    if (fragment != null && fragment.getView() != null) {
+                        TabBarFragment tabBarFragment = fragment.getTabBarFragment();
+                        if (tabBarFragment != null) {
+                            TabBar tabBar = tabBarFragment.getTabBar();
+                            tabBar.setBarBackgroundColor(bottomBarColor);
+                            tabBar.initialise();
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    @ReactMethod
     public void replaceTabIcon(final String sceneId, final int index, final ReadableMap icon, final ReadableMap inactiveIcon) {
         handler.post(new Runnable() {
             @Override
@@ -266,18 +268,56 @@ public class GardenModule extends ReactContextBaseJavaModule {
                 if (fragment != null && fragment.getView() != null) {
                     TabBarFragment tabBarFragment = fragment.getTabBarFragment();
                     if (tabBarFragment != null) {
-                        BottomBar bottomBar = tabBarFragment.getBottomBar();
-                        Drawable drawable = drawableFromReadableMap(bottomBar.getContext(), icon);
+                        TabBar tabBar = tabBarFragment.getTabBar();
+                        Drawable drawable = drawableFromReadableMap(tabBar.getContext(), icon);
                         if (drawable == null) {
                             return;
                         }
-                        Drawable inactiveDrawable = drawableFromReadableMap(bottomBar.getContext(), inactiveIcon);
-                        bottomBar.setTabIcon(index, drawable, inactiveDrawable);
+                        Drawable inactiveDrawable = drawableFromReadableMap(tabBar.getContext(), inactiveIcon);
+                        tabBar.setTabIcon(index, drawable, inactiveDrawable);
                         AwesomeFragment f = tabBarFragment.getChildFragments().get(index);
                         f.getTabBarItem().iconUri = icon.getString("uri");
                         if (inactiveIcon != null && inactiveIcon.hasKey("uri")) {
                             f.getTabBarItem().inactiveIconUri = inactiveIcon.getString("uri");
                         }
+                    }
+                }
+            }
+        });
+    }
+
+
+    @ReactMethod
+    public void setTabBadge(final String sceneId, final int index, final String text) {
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                ReactFragment fragment = (ReactFragment) findFragmentBySceneId(sceneId);
+                if (fragment != null) {
+                    TabBarFragment tabBarFragment = fragment.getTabBarFragment();
+                    if (tabBarFragment != null) {
+                        AwesomeFragment presented = tabBarFragment.getPresentedFragment();
+                        if (presented != null) {
+                            presented.dismissFragment();
+                        }
+                        TabBar tabBar = tabBarFragment.getTabBar();
+                        tabBar.setBadge(index, text);
+                    }
+                }
+            }
+        });
+    }
+
+    @ReactMethod
+    public void setMenuInteractive(final String sceneId, final boolean enabled) {
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                AwesomeFragment awesomeFragment = findFragmentBySceneId(sceneId);
+                if (awesomeFragment != null) {
+                    DrawerFragment drawerFragment = awesomeFragment.getDrawerFragment();
+                    if (drawerFragment != null) {
+                        drawerFragment.setDrawerLockMode(enabled ? DrawerLayout.LOCK_MODE_UNLOCKED : DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
                     }
                 }
             }
@@ -305,6 +345,5 @@ public class GardenModule extends ReactContextBaseJavaModule {
     private HybridFragment findFragmentBySceneId(FragmentManager fragmentManager, String sceneId) {
         return (HybridFragment) FragmentHelper.findDescendantFragment(fragmentManager, sceneId);
     }
-
 
 }

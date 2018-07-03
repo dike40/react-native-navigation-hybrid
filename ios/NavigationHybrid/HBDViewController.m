@@ -41,12 +41,15 @@
     return self;
 }
 
-- (void)didReceiveResultCode:(NSInteger)resultCode resultData:(NSDictionary *)data requestCode:(NSInteger)requestCode {
-    NSLog(@"requestCode:%ld, resultCode:%ld, data:%@", (long)requestCode, (long)resultCode, data);
-}
-
 - (void)setAppProperties:(NSDictionary *)props {
     self.props = props;
+}
+
+- (UIStatusBarStyle)preferredStatusBarStyle {
+    if (self.hbd_barStyle) {
+        return self.hbd_barStyle == UIBarStyleBlack ? UIStatusBarStyleLightContent : UIStatusBarStyleDefault;
+    }
+    return [UIApplication sharedApplication].statusBarStyle;
 }
 
 - (void)viewDidLoad {

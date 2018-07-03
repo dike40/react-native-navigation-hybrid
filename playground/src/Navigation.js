@@ -17,6 +17,10 @@ const REQUEST_CODE = 1;
 
 export default class Navigation extends Component {
   static navigationItem = {
+    //topBarStyle: 'light-content',
+    //topBarColor: '#666666',
+    //topBarTintColor: '#ffffff',
+    //titleTextColor: '#ffffff',
     titleItem: {
       title: 'RN navigation',
     },
@@ -40,6 +44,8 @@ export default class Navigation extends Component {
     this.replaceToRoot = this.replaceToRoot.bind(this);
     this.present = this.present.bind(this);
     this.switchToTab = this.switchToTab.bind(this);
+    this.showModal = this.showModal.bind(this);
+    this.showNativeModal = this.showNativeModal.bind(this);
     this.state = {
       text: undefined,
       backId: undefined,
@@ -48,8 +54,14 @@ export default class Navigation extends Component {
     };
   }
 
+  componentDidAppear() {
+    this.props.navigator.isRoot().then(isRoot => {
+      this.props.garden.setMenuInteractive(isRoot);
+    });
+  }
+
   componentWillMount() {
-    this.props.navigation.isRoot().then(isRoot => {
+    this.props.navigator.isRoot().then(isRoot => {
       if (isRoot) {
         this.setState({ isRoot });
       }
@@ -86,54 +98,62 @@ export default class Navigation extends Component {
   push() {
     if (!this.state.isRoot) {
       if (this.props.popToId !== undefined) {
-        this.props.navigation.push('Navigation', {
+        this.props.navigator.push('Navigation', {
           popToId: this.props.popToId,
         });
       } else {
-        this.props.navigation.push('Navigation', {
+        this.props.navigator.push('Navigation', {
           popToId: this.props.sceneId,
         });
       }
     } else {
-      this.props.navigation.push('Navigation');
+      this.props.navigator.push('Navigation');
     }
   }
 
   pop() {
-    this.props.navigation.setResult(RESULT_OK, { backId: this.props.sceneId });
-    this.props.navigation.pop();
+    this.props.navigator.setResult(RESULT_OK, { backId: this.props.sceneId });
+    this.props.navigator.pop();
   }
 
   popTo() {
-    this.props.navigation.setResult(RESULT_OK, { backId: this.props.sceneId });
-    this.props.navigation.popTo(this.props.popToId);
+    this.props.navigator.setResult(RESULT_OK, { backId: this.props.sceneId });
+    this.props.navigator.popTo(this.props.popToId);
   }
 
   popToRoot() {
-    this.props.navigation.setResult(RESULT_OK, { backId: this.props.sceneId });
-    this.props.navigation.popToRoot();
+    this.props.navigator.setResult(RESULT_OK, { backId: this.props.sceneId });
+    this.props.navigator.popToRoot();
   }
 
   replace() {
     if (this.props.popToId !== undefined) {
-      this.props.navigation.replace('Navigation', {
+      this.props.navigator.replace('Navigation', {
         popToId: this.props.popToId,
       });
     } else {
-      this.props.navigation.replace('Navigation');
+      this.props.navigator.replace('Navigation');
     }
   }
 
   replaceToRoot() {
-    this.props.navigation.replaceToRoot('Navigation');
+    this.props.navigator.replaceToRoot('Navigation');
   }
 
   present() {
-    this.props.navigation.present('Result', REQUEST_CODE);
+    this.props.navigator.present('Result', REQUEST_CODE);
   }
 
   switchToTab() {
-    this.props.navigation.switchToTab(1);
+    this.props.navigator.switchToTab(1);
+  }
+
+  showModal() {
+    this.props.navigator.showModal('ReactModal', REQUEST_CODE);
+  }
+
+  showNativeModal() {
+    this.props.navigator.showModal('NativeModal', REQUEST_CODE);
   }
 
   render() {
@@ -199,6 +219,18 @@ export default class Navigation extends Component {
 
           <TouchableOpacity onPress={this.switchToTab} activeOpacity={0.2} style={styles.button}>
             <Text style={styles.buttonText}>switch to tab 'Options'</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={this.showModal} activeOpacity={0.2} style={styles.button}>
+            <Text style={styles.buttonText}>show react modal</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={this.showNativeModal}
+            activeOpacity={0.2}
+            style={styles.button}
+          >
+            <Text style={styles.buttonText}>show native modal</Text>
           </TouchableOpacity>
 
           {this.state.text !== undefined && (

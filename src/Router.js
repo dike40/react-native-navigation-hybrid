@@ -1,40 +1,41 @@
 import pathToRegexp from 'path-to-regexp';
 import { Linking } from 'react-native';
-import Navigation from './Navigation';
+import Navigator from './Navigator';
 import NavigationModule from './NavigationModule';
 
 let configs = new Map();
-let intercepters = new Set();
+let interceptors = new Set();
 let active = 0;
 
-function dependenciesForRoute(config = {}) {
+function routeDependencies(routeConfig) {
   let dependencies = [];
-  while (config && config.dependency) {
-    dependencies.push(config.dependency);
-    config = configs.get(config.dependency);
+  while (routeConfig && routeConfig.dependency) {
+    dependencies.push(routeConfig.dependency);
+    routeConfig = configs.get(routeConfig.dependency);
   }
   return dependencies.reverse();
 }
 
-function navigateTo(graph, target) {
+function navigateTo(graph, route) {
   if (graph.type === 'drawer') {
     const drawer = graph.drawer;
-    if (navigateTo(drawer[0], target)) {
-      const navigation = getNavigationForGraph(drawer[0]);
+    if (navigateTo(drawer[0], route)) {
+      const navigation = navigatorFromRouteGraph(drawer[0]);
       navigation.closeMenu();
       return true;
     }
-    if (navigateTo(drawer[1], target)) {
-      const navigation = getNavigationForGraph(drawer[0]);
+    if (navigateTo(drawer[1], route)) {
+      // 打开侧边栏
+      const navigation = navigatorFromRouteGraph(drawer[0]);
       navigation.openMenu();
       return true;
     }
   } else if (graph.type === 'tabs') {
     const tabs = graph.tabs;
     for (let i = 0; i < tabs.length; i++) {
-      if (navigateTo(tabs[i], target)) {
+      if (navigateTo(tabs[i], route)) {
         if (i !== graph.selectedIndex) {
-          const navigation = getNavigationForGraph(tabs[graph.selectedIndex]);
+          const navigation = navigatorFromRouteGraph(tabs[graph.selectedIndex]);
           navigation.switchToTab(i);
         }
         return true;
@@ -42,7 +43,7 @@ function navigateTo(graph, target) {
     }
   } else if (graph.type === 'stack') {
     const stack = graph.stack;
-    let moduleNames = [...target.dependencies, target.moduleName];
+    let moduleNames = [...route.dependencies, route.moduleName];
     let index = -1;
     for (let i = stack.length - 1; i > -1; i--) {
       if (stack[i].type === 'screen') {
@@ -54,42 +55,43 @@ function navigateTo(graph, target) {
       }
     }
     if (index !== -1) {
-      moduleNames = moduleNames.slice(index + 1);
-      const navigation = getNavigationForGraph(graph);
-      for (let i = 0; i < moduleNames.length; i++) {
-        if (i === moduleNames.length - 1) {
-          navigation.push(target.moduleName, target.props);
-        } else {
-          navigation.push(moduleNames[i]);
+      let peddingModuleNames = moduleNames.slice(index + 1);
+      const navigation = navigatorFromRouteGraph(graph);
+      if (peddingModuleNames.length === 0) {
+        navigation.replace(route.moduleName, route.props);
+      } else {
+        for (let i = 0; i < peddingModuleNames.length; i++) {
+          if (i === peddingModuleNames.length - 1) {
+            navigation.push(route.moduleName, route.props);
+          } else {
+            navigation.push(peddingModuleNames[i]);
+          }
         }
-      }
-      if (moduleNames.length === 0) {
-        navigation.replace(target.moduleName, target.props);
       }
       return true;
     }
   } else if (graph.type === 'screen') {
     const screen = graph.screen;
-    if (screen.moduleName === target.moduleName) {
+    if (screen.moduleName === route.moduleName) {
       return true;
     }
   }
   return false;
 }
 
-function getNavigationForGraph(graph) {
+function navigatorFromRouteGraph(graph) {
   if (graph.type === 'drawer') {
     const drawer = graph.drawer;
-    return getNavigationForGraph(drawer[0]);
+    return navigatorFromRouteGraph(drawer[0]);
   } else if (graph.type === 'tabs') {
     const tabs = graph.tabs;
-    return getNavigationForGraph(tabs[graph.selectedIndex]);
+    return navigatorFromRouteGraph(tabs[graph.selectedIndex]);
   } else if (graph.type === 'stack') {
     const stack = graph.stack;
-    return getNavigationForGraph(stack[0]);
+    return navigatorFromRouteGraph(stack[0]);
   } else if (graph.type === 'screen') {
     const screen = graph.screen;
-    return new Navigation(screen.sceneId);
+    return new Navigator(screen.sceneId);
   }
   return null;
 }
@@ -105,50 +107,50 @@ class Router {
     configs.clear();
   }
 
-  routeGraph() {
+  async routeGraph() {
     return NavigationModule.routeGraph();
   }
 
-  currentRoute() {
+  async currentRoute() {
     return NavigationModule.currentRoute();
   }
 
-  addRoute(key, config = {}) {
-    if (config.path) {
-      config.pathRegexp = pathToRegexp(config.path);
-      let params = pathToRegexp.parse(config.path).slice(1);
-      config.paramNames = [];
+  addRoute(key, routeConfig = {}) {
+    if (routeConfig.path) {
+      routeConfig.pathRegexp = pathToRegexp(routeConfig.path);
+      let params = pathToRegexp.parse(routeConfig.path).slice(1);
+      routeConfig.paramNames = [];
       for (let i = 0; i < params.length; i++) {
-        config.paramNames.push(params[i].name);
+        routeConfig.paramNames.push(params[i].name);
       }
     }
-    config.moduleName = key;
-    configs.set(key, config);
+    routeConfig.moduleName = key;
+    configs.set(key, routeConfig);
   }
 
-  registerIntercepter(func) {
-    intercepters.add(func);
+  registerInterceptor(func) {
+    interceptors.add(func);
   }
 
-  unregisterIntercepter(func) {
-    intercepters.delete(func);
+  unregisterInterceptor(func) {
+    interceptors.delete(func);
   }
 
   pathToRoute(path) {
-    for (const config of configs.values()) {
-      if (!config.pathRegexp) {
+    for (const routeConfig of configs.values()) {
+      if (!routeConfig.pathRegexp) {
         continue;
       }
-      const match = config.pathRegexp.exec(path);
+      const match = routeConfig.pathRegexp.exec(path);
       if (match) {
-        const moduleName = config.moduleName;
+        const moduleName = routeConfig.moduleName;
         const props = {};
-        const names = config.paramNames;
+        const names = routeConfig.paramNames;
         for (let i = 0; i < names.length; i++) {
           props[names[i]] = match[i + 1];
         }
-        const dependencies = dependenciesForRoute(config);
-        return { moduleName, props, dependencies, mode: config.mode };
+        const dependencies = routeDependencies(routeConfig);
+        return { moduleName, props, dependencies, mode: routeConfig.mode };
       }
     }
     return {};
@@ -159,32 +161,31 @@ class Router {
       return;
     }
 
-    let intercept = false;
-    for (let intercepter of intercepters.values()) {
-      intercept = intercepter(path);
-      if (intercept) {
+    let intercepted = false;
+    for (let interceptor of interceptors.values()) {
+      intercepted = interceptor(path);
+      if (intercepted) {
         return;
       }
     }
 
-    const target = this.pathToRoute(path);
-    if (target && target.moduleName) {
+    const route = this.pathToRoute(path);
+    if (route && route.moduleName) {
       try {
         const graph = await this.routeGraph();
-        if (target.mode === 'modal') {
-          let navigation = getNavigationForGraph(graph[0]);
-          navigation.present(target.moduleName, 0, target.props);
+        if (route.mode === 'modal') {
+          let navigation = navigatorFromRouteGraph(graph[0]);
+          navigation.present(route.moduleName, 0, route.props);
         } else {
+          // push
           if (graph.length > 1) {
-            let navigation = getNavigationForGraph(graph[1]);
+            let navigation = navigatorFromRouteGraph(graph[1]);
             navigation.dismiss();
           }
-          if (navigateTo(graph[0], target)) {
-            // empty
-          } else {
-            let navigation = getNavigationForGraph(graph[0]);
+          if (!navigateTo(graph[0], route)) {
+            let navigation = navigatorFromRouteGraph(graph[0]);
             navigation.closeMenu();
-            navigation.push(target.moduleName, target.props);
+            navigation.push(route.moduleName, route.props);
           }
         }
       } catch (error) {
@@ -213,12 +214,10 @@ class Router {
       Linking.addEventListener('url', this._routeEventHandler);
     }
     active++;
-    console.info('active count:' + active);
   }
 
   inactivate() {
     active--;
-    console.info('active count:' + active);
     if (active == 0) {
       Linking.removeEventListener('url', this._routeEventHandler);
     }
@@ -232,4 +231,12 @@ class Router {
 }
 
 const router = new Router();
+
+export function route(path, config = {}) {
+  config.path = path;
+  return function(constructor) {
+    constructor.routeConfig = config;
+  };
+}
+
 export default router;

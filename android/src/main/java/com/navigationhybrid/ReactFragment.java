@@ -1,11 +1,14 @@
 package com.navigationhybrid;
 
+import android.app.Activity;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +16,7 @@ import android.widget.FrameLayout;
 
 import com.facebook.react.ReactRootView;
 import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.ReactContext;
 
 import me.listenzz.navigation.FragmentHelper;
 import me.listenzz.navigation.PresentAnimation;
@@ -153,6 +157,12 @@ public class ReactFragment extends HybridFragment {
         }
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume");
+    }
+
     public void signalFirstRenderComplete() {
         Log.d(TAG, "signalFirstRenderComplete");
         startPostponedEnterTransition();
@@ -176,4 +186,33 @@ public class ReactFragment extends HybridFragment {
         }
     }
 
+    @Override
+    protected void setupDialog() {
+        super.setupDialog();
+        getDialog().setOnKeyListener(
+                new DialogInterface.OnKeyListener() {
+                    @Override
+                    public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
+                        if (event.getAction() == KeyEvent.ACTION_UP && keyCode == KeyEvent.KEYCODE_BACK) {
+                            Bundle bundle = new Bundle();
+                            bundle.putString("sceneId", getSceneId());
+                            getReactBridgeManager().sendEvent("ON_DIALOG_BACK_PRESSED", Arguments.fromBundle(bundle));
+                            return true;
+                        }
+
+                        ReactContext reactContext = getReactBridgeManager().getReactInstanceManager().getCurrentReactContext();
+                        if (reactContext != null && !getReactBridgeManager().isReactModuleInRegistry()) {
+                            Activity activity = reactContext.getCurrentActivity();
+                            if (activity != null) {
+                                if (KeyEvent.ACTION_UP == event.getAction()) {
+                                    activity.onKeyUp(keyCode, event);
+                                } else if (KeyEvent.ACTION_DOWN == event.getAction()) {
+                                    activity.onKeyDown(keyCode, event);
+                                }
+                            }
+                        }
+                        return false;
+                    }
+                });
+    }
 }

@@ -60,10 +60,6 @@ public class Garden {
         this.style = style;
 
         Bundle options = fragment.getOptions();
-        if (options == null) {
-            options = new Bundle();
-        }
-
         this.options = options;
 
         this.backButtonHidden = options.getBoolean("backButtonHidden", false);
@@ -214,7 +210,7 @@ public class Garden {
         fragment.setNeedsStatusBarAppearanceUpdate();
     }
 
-    void setTopBarStyle(BarStyle barStyle) {
+    void setStatusBarStyle(BarStyle barStyle) {
         style.setStatusBarStyle(barStyle);
         fragment.setNeedsStatusBarAppearanceUpdate();
     }
@@ -226,7 +222,7 @@ public class Garden {
         }
     }
 
-    void setTopBarColor(int color) {
+    void setToolbarColor(int color) {
         style.setToolbarBackgroundColor(color);
         fragment.setNeedsToolbarAppearanceUpdate();
     }

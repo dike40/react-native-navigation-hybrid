@@ -1,6 +1,6 @@
 package com.navigationhybrid.playground;
 
-import android.app.Application;
+import android.support.multidex.MultiDexApplication;
 
 import com.facebook.react.ReactApplication;
 import com.facebook.react.ReactNativeHost;
@@ -10,15 +10,17 @@ import com.facebook.soloader.SoLoader;
 import com.navigationhybrid.NavigationHybridPackage;
 import com.navigationhybrid.ReactBridgeManager;
 import com.oblador.vectoricons.VectorIconsPackage;
+import com.taihua.hud.HUDReactPackage;
 
 import java.util.Arrays;
 import java.util.List;
+
 
 /**
  * Created by Listen on 2017/11/17.
  */
 
-public class MainApplication extends Application implements ReactApplication{
+public class MainApplication extends MultiDexApplication implements ReactApplication{
 
     private final ReactNativeHost mReactNativeHost = new ReactNativeHost(this) {
         @Override
@@ -31,7 +33,8 @@ public class MainApplication extends Application implements ReactApplication{
             return Arrays.<ReactPackage>asList(
                     new MainReactPackage(),
                     new NavigationHybridPackage(),
-                    new VectorIconsPackage()
+                    new VectorIconsPackage(),
+                    new HUDReactPackage()
             );
         }
 
@@ -56,6 +59,7 @@ public class MainApplication extends Application implements ReactApplication{
 
         // register native modules
         bridgeManager.registerNativeModule("OneNative", OneNativeFragment.class);
+        bridgeManager.registerNativeModule("NativeModal", NativeModalFragment.class);
 
     }
 }

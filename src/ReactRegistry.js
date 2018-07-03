@@ -1,6 +1,6 @@
 import { AppRegistry, DeviceEventEmitter, NativeEventEmitter, Platform } from 'react-native';
 import React, { Component } from 'react';
-import Navigation from './Navigation';
+import Navigator from './Navigator';
 import NavigationModule from './NavigationModule';
 import Garden from './Garden';
 import router from './Router';
@@ -12,7 +12,7 @@ const EventEmitter = Platform.select({
 
 let componentWrapperFunc;
 
-let navigations = new Map();
+let navigators = new Map();
 
 function copy(obj = {}) {
   let target = {};
@@ -50,18 +50,24 @@ export default {
 
   registerComponent(appKey, componentProvider, routeConfig) {
     const RealComponent = componentProvider();
-    router.addRoute(appKey, routeConfig);
+    if (RealComponent.routeConfig) {
+      RealComponent.routeConfig.moduleName = appKey;
+      router.addRoute(appKey, RealComponent.routeConfig);
+    }
+    if (routeConfig) {
+      router.addRoute(appKey, routeConfig);
+    }
 
     class Screen extends Component {
       static InternalComponent = RealComponent;
 
       constructor(props) {
         super(props);
-        if (navigations.has(props.sceneId)) {
-          this.navigation = navigations.get(props.sceneId);
+        if (navigators.has(props.sceneId)) {
+          this.navigator = navigators.get(props.sceneId);
         } else {
-          this.navigation = new Navigation(props.sceneId);
-          navigations.set(props.sceneId, this.navigation);
+          this.navigator = new Navigator(props.sceneId, appKey);
+          navigators.set(props.sceneId, this.navigator);
         }
         this.options = copy(RealComponent.navigationItem);
         this.garden = new Garden(props.sceneId, this.options);
@@ -73,15 +79,15 @@ export default {
           if (this.props.sceneId === event.sceneId && RealComponent.navigationItem) {
             // console.info(JSON.stringify(event));
             if (event.action === 'right_bar_button_item_click') {
-              this.options.rightBarButtonItem.action(this.navigation);
+              this.options.rightBarButtonItem.action(this.navigator);
             } else if (event.action === 'left_bar_button_item_click') {
-              this.options.leftBarButtonItem.action(this.navigation);
+              this.options.leftBarButtonItem.action(this.navigator);
             } else if (event.action.startsWith('right_bar_button_item_click_')) {
               let index = event.action.replace('right_bar_button_item_click_', '');
-              this.options.rightBarButtonItems[index].action(this.navigation);
+              this.options.rightBarButtonItems[index].action(this.navigator);
             } else if (event.action.startsWith('left_bar_button_item_click_')) {
               let index = event.action.replace('left_bar_button_item_click_', '');
-              this.options.leftBarButtonItems[index].action(this.navigation);
+              this.options.leftBarButtonItems[index].action(this.navigator);
             } else if (this.refs.real.onBarButtonItemClick) {
               this.refs.real.onBarButtonItemClick(event.action); // 向后兼容
             }
@@ -118,18 +124,38 @@ export default {
         this.events.push(event);
       }
 
+      listenDialogBackPressedEvent() {
+        let event = EventEmitter.addListener('ON_DIALOG_BACK_PRESSED', event => {
+          if (this.props.sceneId === event.sceneId && this.refs.real.onBackPressed) {
+            this.refs.real.onBackPressed();
+          }
+        });
+        this.events.push(event);
+      }
+
+      listenComponentBackEvent() {
+        let event = EventEmitter.addListener('ON_COMPONENT_BACK', event => {
+          if (this.props.sceneId === event.sceneId && this.refs.real.onComponentBack) {
+            this.refs.real.onComponentBack();
+          }
+        });
+        this.events.push(event);
+      }
+
       componentDidMount() {
         // console.debug('componentDidMount    = ' + this.props.sceneId);
         this.listenComponentResultEvent();
         this.listenBarButtonItemClickEvent();
         this.listenComponentResumeEvent();
         this.listenComponentPauseEvent();
-        this.navigation.signalFirstRenderComplete();
+        this.listenDialogBackPressedEvent();
+        this.listenComponentBackEvent();
+        this.navigator.signalFirstRenderComplete();
       }
 
       componentWillUnmount() {
         // console.debug('componentWillUnmount = ' + this.props.sceneId);
-        navigations.delete(this.props.sceneId);
+        navigators.delete(this.props.sceneId);
         this.events.forEach(event => {
           event.remove();
         });
@@ -140,8 +166,8 @@ export default {
           <RealComponent
             ref="real"
             {...this.props}
-            navigation={this.navigation}
-            navigator={this.navigation} // 向后兼容
+            navigation={this.navigator} // 向后兼容
+            navigator={this.navigator}
             garden={this.garden}
           />
         );
@@ -149,6 +175,7 @@ export default {
     }
 
     let RootComponent;
+    Screen.componentName = appKey;
     if (componentWrapperFunc) {
       RootComponent = componentWrapperFunc(() => Screen);
     } else {

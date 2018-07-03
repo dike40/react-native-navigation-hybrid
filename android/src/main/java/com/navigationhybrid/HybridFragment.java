@@ -26,7 +26,7 @@ public class HybridFragment extends AwesomeFragment {
     private Garden garden;
 
     @Override
-    protected void onCustomStyle(Style style) {
+    protected void onCustomStyle(@NonNull Style style) {
         super.onCustomStyle(style);
         garden = new Garden(this, style);
     }
@@ -47,7 +47,7 @@ public class HybridFragment extends AwesomeFragment {
     }
 
     @Override
-    protected boolean backInteractive() {
+    protected boolean isBackInteractive() {
         return garden.backInteractive;
     }
 
@@ -69,9 +69,14 @@ public class HybridFragment extends AwesomeFragment {
         return bridgeManager;
     }
 
+    @NonNull
     public Bundle getOptions() {
         Bundle args = FragmentHelper.getArguments(this);
-        return args.getBundle(Constants.ARG_OPTIONS);
+        Bundle bundle = args.getBundle(Constants.ARG_OPTIONS);
+        if (bundle == null) {
+            bundle = new Bundle();
+        }
+        return bundle;
     }
 
     public void setOptions(@NonNull Bundle options) {
