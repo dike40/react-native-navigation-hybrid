@@ -50,10 +50,16 @@
             self.barStyle = UIBarStyleDefault;
         }
         
-        // topBarBackgroundColor
+        // topBarColor
         NSString *topBarColor = self.options[@"topBarColor"];
         if (topBarColor) {
             self.barTintColor = [HBDUtils colorWithHexString:topBarColor];
+        }  else {
+            if (self.barStyle == UIBarStyleBlack) {
+                self.barTintColor = UIColor.blackColor;
+            } else {
+                self.barTintColor = UIColor.whiteColor;
+            }
         }
         
         // navigationBar shadowImeage
@@ -140,6 +146,14 @@
             self.tabBarUnselectedTintColor = [HBDUtils colorWithHexString:bottomBarButtonItemInactiveColor];
         }
         
+        if (@available(iOS 10.0, *)) {
+            NSString *badgeColor = self.options[@"badgeColor"];
+            if (badgeColor) {
+                [UITabBarItem appearance].badgeColor = [HBDUtils colorWithHexString:badgeColor];
+            }
+        } else {
+            // Fallback on earlier versions
+        }
     }
     return self;
 }

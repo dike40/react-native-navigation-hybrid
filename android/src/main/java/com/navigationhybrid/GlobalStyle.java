@@ -62,7 +62,7 @@ public class GlobalStyle {
             style.setStatusBarStyle(topBarStyle.equals("dark-content") ? BarStyle.DarkContent : BarStyle.LightContent);
         }
 
-        // topBarBackgroundColor
+        // topBarColor
         String topBarColor = options.getString("topBarColor");
         if (topBarColor != null) {
             style.setToolbarBackgroundColor(Color.parseColor(topBarColor));
@@ -199,6 +199,12 @@ public class GlobalStyle {
         // swipeBackEnabledAndroid
         boolean swipeBackEnabled = options.getBoolean("swipeBackEnabledAndroid", false);
         style.setSwipeBackEnabled(swipeBackEnabled);
+
+        // badgeColor;
+        String badgeColor = options.getString("badgeColor");
+        if (badgeColor != null) {
+            style.setBadgeColor(badgeColor);
+        }
 
     }
 
