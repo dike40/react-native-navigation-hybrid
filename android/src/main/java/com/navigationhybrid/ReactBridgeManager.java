@@ -16,11 +16,11 @@ import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
-import com.navigationhybrid.router.TabNavigator;
-import com.navigationhybrid.router.DrawerNavigator;
-import com.navigationhybrid.router.Navigator;
-import com.navigationhybrid.router.ScreenNavigator;
-import com.navigationhybrid.router.StackNavigator;
+import com.navigationhybrid.navigator.DrawerNavigator;
+import com.navigationhybrid.navigator.Navigator;
+import com.navigationhybrid.navigator.ScreenNavigator;
+import com.navigationhybrid.navigator.StackNavigator;
+import com.navigationhybrid.navigator.TabNavigator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,6 +29,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import me.listenzz.navigation.AwesomeFragment;
 import me.listenzz.navigation.FragmentHelper;
+import me.listenzz.navigation.TabBarItem;
 
 /**
  * Created by Listen on 2017/11/17.
@@ -224,15 +225,37 @@ public class ReactBridgeManager {
         return fragment;
     }
 
-    public void buildRouteGraph(AwesomeFragment fragment, ArrayList<Bundle> graph) {
+    public void buildRouteGraph(AwesomeFragment fragment, ArrayList<Bundle> graph, ArrayList<Bundle> modalContainer) {
+        List<AwesomeFragment> children = fragment.getChildFragmentsAtAddedList();
+        if (children.size() > 0) {
+            for (int i = 0; i < children.size(); i ++) {
+                AwesomeFragment child = children.get(i);
+                if (child.getShowsDialog()) {
+                    for (Navigator navigator : navigators) {
+                        if (navigator.buildRouteGraph(child, modalContainer, modalContainer)) {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
         for (Navigator navigator : navigators) {
-            if (navigator.buildRouteGraph(fragment, graph)) {
-                return;
+            if (navigator.buildRouteGraph(fragment, graph, modalContainer)) {
+                break;
             }
         }
     }
 
     public HybridFragment primaryChildFragment(AwesomeFragment f) {
+        List<AwesomeFragment> children = f.getChildFragmentsAtAddedList();
+        if (children.size() > 0) {
+            AwesomeFragment last = children.get(children.size() -1);
+            if (last.getShowsDialog()) {
+                f = last;
+            }
+        }
+
         HybridFragment fragment = null;
         for (Navigator navigator : navigators) {
             fragment = navigator.primaryChildFragment(f);
@@ -243,7 +266,7 @@ public class ReactBridgeManager {
         return fragment;
     }
 
-    public void handleNavigation(@Nullable AwesomeFragment fragment, @NonNull String action, @NonNull Bundle extras) {
+    public void handleNavigation(@Nullable AwesomeFragment fragment, @NonNull String action, @NonNull ReadableMap extras) {
         if (fragment == null) {
             return;
         }
@@ -303,6 +326,25 @@ public class ReactBridgeManager {
                 options = Arguments.toBundle(writableMap);
             }
 
+            if (options != null) {
+                Bundle tabItem = options.getBundle("tabItem");
+                if (tabItem != null) {
+                    String title = tabItem.getString("title");
+                    Bundle icon = tabItem.getBundle("icon");
+                    String uri = null;
+                    if (icon != null) {
+                        uri = icon.getString("uri");
+                    }
+                    TabBarItem tabBarItem = new TabBarItem(uri, title);
+
+                    Bundle selectedIcon = tabItem.getBundle("selectedIcon");
+                    if (selectedIcon != null) {
+                        tabBarItem.selectedIconUri = selectedIcon.getString("uri");
+                    }
+                    fragment.setTabBarItem(tabBarItem);
+                }
+            }
+
             Bundle args = FragmentHelper.getArguments(fragment);
             args.putBundle(Constants.ARG_PROPS, props);
             args.putBundle(Constants.ARG_OPTIONS, options);
@@ -316,7 +358,7 @@ public class ReactBridgeManager {
 
     private List<Navigator> navigators = new ArrayList<>();
 
-    void registerNavigator(Navigator navigator) {
+    public void registerNavigator(Navigator navigator) {
         navigators.add(0, navigator);
     }
 }

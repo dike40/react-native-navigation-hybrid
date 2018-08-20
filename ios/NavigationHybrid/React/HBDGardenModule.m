@@ -34,7 +34,7 @@ RCT_EXPORT_MODULE(GardenHybrid)
 - (NSDictionary *)constantsToExport {
     return @{
              @"DARK_CONTENT": @"dark-content",
-             @"LIGHT_CONTENT": @"lieht-content",
+             @"LIGHT_CONTENT": @"light-content",
              };
 }
 
@@ -65,6 +65,19 @@ RCT_EXPORT_METHOD(setTitleItem:(NSString *)sceneId item:(NSDictionary *)item) {
 
 RCT_EXPORT_METHOD(setStatusBarColor:(NSString *)sceneId item:(NSDictionary *)item) {
     NSLog(@"setStatusBarColor: %@", item);
+}
+
+RCT_EXPORT_METHOD(setStatusBarHidden:(NSString *)sceneId item:(NSDictionary *)item) {
+    NSNumber *statusBarHidden = [item objectForKey:@"statusBarHidden"];
+    if (statusBarHidden) {
+        HBDViewController *vc = [self controllerForSceneId:sceneId];
+        NSDictionary *options = vc.options;
+        NSMutableDictionary *mutable =  [options mutableCopy];
+        [mutable setObject:statusBarHidden forKey:@"statusBarHidden"];
+        vc.options = [mutable copy];
+        HBDGarden *garden = [[HBDGarden alloc] init];
+        [garden setStatusBarHidden:[statusBarHidden boolValue] forController:vc];
+    }
 }
 
 RCT_EXPORT_METHOD(setTopBarStyle:(NSString *)sceneId item:(NSDictionary *)item) {
@@ -113,16 +126,16 @@ RCT_EXPORT_METHOD(setTopBarColor:(NSString *)sceneId item:(NSDictionary *)item) 
     NSLog(@"setTopBarColor: %@", item);
 }
 
-RCT_EXPORT_METHOD(setBottomBarColor:(NSString *)sceneId item:(NSDictionary *)item) {
-    NSString *bottomBarColor = [item objectForKey:@"bottomBarColor"];
-    if (bottomBarColor) {
+RCT_EXPORT_METHOD(setTabBarColor:(NSString *)sceneId item:(NSDictionary *)item) {
+    NSString *tabBarColor = [item objectForKey:@"tabBarColor"];
+    if (tabBarColor) {
         HBDViewController *vc = [self controllerForSceneId:sceneId];
         UITabBarController *tabBarVC = vc.tabBarController;
         if (tabBarVC) {
-           [tabBarVC.tabBar setBackgroundImage:[HBDUtils imageWithColor:[HBDUtils colorWithHexString:bottomBarColor]]];
+           [tabBarVC.tabBar setBackgroundImage:[HBDUtils imageWithColor:[HBDUtils colorWithHexString:tabBarColor]]];
         }
     }
-    NSLog(@"setBottomBarColor: %@", item);
+    NSLog(@"setTabBarColor: %@", item);
 }
 
 RCT_EXPORT_METHOD(setTopBarShadowHidden:(NSString *)sceneId item:(NSDictionary *)item) {
@@ -169,15 +182,15 @@ RCT_EXPORT_METHOD(hideRedPointAtIndex:(NSInteger)index sceneId:(NSString *)scene
     NSLog(@"hideRedPointAtIndex: %li", index);
 }
 
-RCT_EXPORT_METHOD(replaceTabIcon:(NSString *)sceneId index:(NSInteger)index icon:(NSDictionary *)icon inactiveIcon:(NSDictionary *)inactiveIcon) {
+RCT_EXPORT_METHOD(replaceTabIcon:(NSString *)sceneId index:(NSInteger)index icon:(NSDictionary *)icon inactiveIcon:(NSDictionary *)selectedIcon) {
     HBDViewController *vc = [self controllerForSceneId:sceneId];
     UITabBarController *tabBarVC = vc.tabBarController;
     if (tabBarVC) {
         UIViewController *tab = [tabBarVC.viewControllers objectAtIndex:index];
         UITabBarItem *tabBarItem = nil;
-        if (inactiveIcon) {
-            UIImage *selectedImage = [[HBDUtils UIImage:icon] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
-            UIImage *image = [[HBDUtils UIImage:inactiveIcon] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
+        if (selectedIcon) {
+            UIImage *selectedImage = [[HBDUtils UIImage:selectedIcon] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
+            UIImage *image = [[HBDUtils UIImage:icon] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
             tabBarItem = [[UITabBarItem alloc] initWithTitle:tab.tabBarItem.title image:image selectedImage:selectedImage];
         } else {
             tabBarItem = [[UITabBarItem alloc] initWithTitle:tab.tabBarItem.title image:[HBDUtils UIImage:icon] selectedImage:nil];
@@ -191,7 +204,7 @@ RCT_EXPORT_METHOD(setMenuInteractive:(NSString *)sceneId enabled:(BOOL)enabled) 
     HBDViewController *vc =  [self controllerForSceneId:sceneId];
     HBDDrawerController *drawer = [vc drawerController];
     if (drawer) {
-        drawer.interactive = enabled;
+        drawer.menuInteractive = enabled;
     }
 }
 

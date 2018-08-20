@@ -1,16 +1,52 @@
 import NavigationModule from './NavigationModule';
-import { NativeModules } from 'react-native';
+import actionIdGenerator from './ActionIdGenerator';
+import { NativeModules, DeviceEventEmitter, NativeEventEmitter, Platform } from 'react-native';
 const GardenModule = NativeModules.GardenHybrid;
+
+const EventEmitter = Platform.select({
+  ios: new NativeEventEmitter(NavigationModule),
+  android: DeviceEventEmitter,
+});
 
 let intercept;
 
+let events = [];
+
 export default class Navigator {
   static setRoot(layout, sticky = false) {
-    NavigationModule.setRoot(layout, sticky);
+    events.forEach(event => {
+      event.remove();
+    });
+    events = [];
+    NavigationModule.setRoot(
+      JSON.parse(
+        JSON.stringify(layout, function(key, value) {
+          if ('action' === key) {
+            const action = 'ON_BAR_BUTTON_ITEM_CLICK-' + actionIdGenerator();
+            let event = EventEmitter.addListener('ON_BAR_BUTTON_ITEM_CLICK', event => {
+              if (event.action === action) {
+                const navigator = new Navigator(event.sceneId);
+                value(navigator);
+              }
+            });
+            events.push(event);
+            return action;
+          }
+          return value;
+        })
+      ),
+      sticky
+    );
   }
 
   static setInterceptor(interceptor) {
     intercept = interceptor;
+  }
+
+  static dispatch(sceneId, action, extras = {}) {
+    if (!intercept || !intercept(action, this.moduleName, extras.moduleName, extras)) {
+      NavigationModule.dispatch(sceneId, action, extras);
+    }
   }
 
   constructor(sceneId, moduleName) {
@@ -45,11 +81,15 @@ export default class Navigator {
 
   // 向后兼容， 1.0.0 将删除
   setTabBadge(index, text) {
+    console.warn('this.props.navigator.setTabBadge 已经弃用，请使用 this.props.garden.setTabBadge');
     GardenModule.setTabBadge(this.sceneId, index, text);
   }
 
   // 向后兼容， 1.0.0 将删除
   setMenuInteractive(enabled) {
+    console.warn(
+      'this.props.navigator.setMenuInteractive 已经弃用，请使用 this.props.garden.setMenuInteractive'
+    );
     GardenModule.setMenuInteractive(this.sceneId, enabled);
   }
 
@@ -58,13 +98,15 @@ export default class Navigator {
   }
 
   dispatch(action, extras = {}) {
-    if (!intercept || !intercept(action, this.moduleName, extras.moduleName, extras)) {
-      NavigationModule.dispatch(this.sceneId, action, extras);
-    }
+    Navigator.dispatch(this.sceneId, action, extras);
   }
 
   push(moduleName, props = {}, options = {}, animated = true) {
     this.dispatch('push', { moduleName, props, options, animated });
+  }
+
+  pushLayout(layout = {}, animated = true) {
+    this.dispatch('pushLayout', { layout, animated });
   }
 
   pop(animated = true) {
@@ -101,6 +143,10 @@ export default class Navigator {
     });
   }
 
+  presentLayout(layout = {}, requestCode = 0, animated = true) {
+    this.dispatch('presentLayout', { layout, requestCode, animated });
+  }
+
   dismiss(animated = true) {
     this.dispatch('dismiss', { animated });
   }
@@ -114,6 +160,10 @@ export default class Navigator {
     });
   }
 
+  showModalLayout(layout = {}, requestCode = 0) {
+    this.dispatch('showModalLayout', { layout, requestCode });
+  }
+
   hideModal() {
     this.dispatch('hideModal');
   }
@@ -123,7 +173,12 @@ export default class Navigator {
   }
 
   switchToTab(index) {
+    console.warn('switchToTab 已弃用，请使用 switchTab');
     this.dispatch('switchToTab', { index });
+  }
+
+  switchTab(index) {
+    this.dispatch('switchTab', { index });
   }
 
   toggleMenu() {

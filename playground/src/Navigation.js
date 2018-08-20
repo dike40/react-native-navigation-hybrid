@@ -28,8 +28,8 @@ export default class Navigation extends Component {
     tabItem: {
       title: 'Navigation',
       icon: { uri: fontUri('FontAwesome', 'location-arrow', 24) },
-      // icon: { uri: 'red_ring', scale: PixelRatio.get() },
-      // inactiveIcon: { uri: 'blue_solid', scale: PixelRatio.get() },
+      //icon: { uri: 'blue_solid', scale: PixelRatio.get() },
+      //selectedIcon: { uri: 'red_ring', scale: PixelRatio.get() },
       hideTabBarWhenPush: true,
     },
   };
@@ -43,7 +43,7 @@ export default class Navigation extends Component {
     this.replace = this.replace.bind(this);
     this.replaceToRoot = this.replaceToRoot.bind(this);
     this.present = this.present.bind(this);
-    this.switchToTab = this.switchToTab.bind(this);
+    this.switchTab = this.switchTab.bind(this);
     this.showModal = this.showModal.bind(this);
     this.showNativeModal = this.showNativeModal.bind(this);
     this.state = {
@@ -71,6 +71,7 @@ export default class Navigation extends Component {
   componentDidMount() {
     const prefix = Platform.OS == 'android' ? 'hbd://hbd/' : 'hbd://';
     router.activate(prefix);
+    this.props.navigator.setResult(RESULT_OK, { backId: this.props.sceneId });
   }
 
   componentWillUnmount() {
@@ -90,7 +91,7 @@ export default class Navigation extends Component {
       }
     } else if (requestCode === 0) {
       if (resultCode === RESULT_OK) {
-        this.setState({ backId: data.backId || undefined });
+        this.setState({ text: data.backId || undefined });
       }
     }
   }
@@ -112,7 +113,7 @@ export default class Navigation extends Component {
   }
 
   pop() {
-    this.props.navigator.setResult(RESULT_OK, { backId: this.props.sceneId });
+    // this.props.navigator.setResult(RESULT_OK, { backId: this.props.sceneId });
     this.props.navigator.pop();
   }
 
@@ -144,12 +145,20 @@ export default class Navigation extends Component {
     this.props.navigator.present('Result', REQUEST_CODE);
   }
 
-  switchToTab() {
-    this.props.navigator.switchToTab(1);
+  switchTab() {
+    this.props.navigator.switchTab(1);
   }
 
   showModal() {
-    this.props.navigator.showModal('ReactModal', REQUEST_CODE);
+    // this.props.navigator.showModal('ReactModal', REQUEST_CODE);
+    this.props.navigator.showModalLayout(
+      {
+        stack: {
+          screen: { moduleName: 'ReactModal' },
+        },
+      },
+      REQUEST_CODE
+    );
   }
 
   showNativeModal() {
@@ -217,7 +226,7 @@ export default class Navigation extends Component {
             <Text style={styles.buttonText}>present</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={this.switchToTab} activeOpacity={0.2} style={styles.button}>
+          <TouchableOpacity onPress={this.switchTab} activeOpacity={0.2} style={styles.button}>
             <Text style={styles.buttonText}>switch to tab 'Options'</Text>
           </TouchableOpacity>
 

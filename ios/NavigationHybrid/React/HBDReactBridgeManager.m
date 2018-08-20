@@ -53,12 +53,24 @@ const NSInteger ResultCancel = 0;
         _reactModules = [[NSMutableDictionary alloc] init];
         _isReactModuleInRegistry = YES;
         _navigators = [[NSMutableArray alloc] init];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleReload) name:RCTBridgeWillReloadNotification object:nil];
     }
     return self;
 }
 
+- (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:RCTBridgeWillReloadNotification object:nil];
+}
+
+- (void)handleReload {
+    UIApplication *application = [[UIApplication class] performSelector:@selector(sharedApplication)];
+    application.keyWindow.rootViewController = [[UIViewController alloc] init];
+    application.keyWindow.rootViewController.view.backgroundColor = UIColor.whiteColor;
+}
+
 - (void)installWithBundleURL:jsCodeLocation launchOptions:(NSDictionary *)launchOptions {
     _jsCodeLocation = jsCodeLocation;
+    
     _bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
 }
 
@@ -139,6 +151,23 @@ const NSInteger ResultCancel = 0;
         NSCAssert([self hasNativeModule:moduleName], @"找不到名为 %@ 的模块，你是否忘了注册？", moduleName);
         vc = [[clazz alloc] initWithModuleName:moduleName props:props options:options];
     }
+    
+    NSDictionary *tabItem = options[@"tabItem"];
+    if (tabItem) {
+        UITabBarItem *tabBarItem = [[UITabBarItem alloc] init];
+        tabBarItem.title = tabItem[@"title"];
+        
+        NSDictionary *selectedIcon = tabItem[@"selectedIcon"];
+        if (selectedIcon) {
+            tabBarItem.selectedImage = [[HBDUtils UIImage:selectedIcon] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
+            tabBarItem.image = [[HBDUtils UIImage:tabItem[@"icon"]] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
+        } else {
+            tabBarItem.image = [HBDUtils UIImage:tabItem[@"icon"]];
+        }
+        
+        vc.tabBarItem = tabBarItem;
+    }
+    
     return vc;
 }
 

@@ -1,4 +1,4 @@
-package com.navigationhybrid.router;
+package com.navigationhybrid.navigator;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -19,7 +19,7 @@ import me.listenzz.navigation.TabBarFragment;
 
 public class TabNavigator implements Navigator {
 
-    private List<String> supportActions = Arrays.asList("switchToTab");
+    private List<String> supportActions = Arrays.asList("switchToTab", "switchTab");
 
     @Override
     public String name() {
@@ -47,6 +47,13 @@ public class TabNavigator implements Navigator {
             if (fragments.size() > 0) {
                 ReactTabBarFragment tabBarFragment = new ReactTabBarFragment();
                 tabBarFragment.setChildFragments(fragments);
+                if (layout.hasKey("options")) {
+                    ReadableMap options = layout.getMap("options");
+                    if (options.hasKey("selectedIndex")) {
+                        int selectedIndex = options.getInt("selectedIndex");
+                        tabBarFragment.setSelectedIndex(selectedIndex);
+                    }
+                }
                 return tabBarFragment;
             } else {
                 throw new IllegalArgumentException("tabs layout should has a child at least");
@@ -56,14 +63,14 @@ public class TabNavigator implements Navigator {
     }
 
     @Override
-    public boolean buildRouteGraph(AwesomeFragment fragment, ArrayList<Bundle> graph) {
+    public boolean buildRouteGraph(AwesomeFragment fragment, ArrayList<Bundle> graph, ArrayList<Bundle> modalContainer) {
         if (fragment instanceof TabBarFragment) {
             TabBarFragment tabs = (TabBarFragment) fragment;
             ArrayList<Bundle> children = new ArrayList<>();
             List<AwesomeFragment> fragments = tabs.getChildFragments();
             for (int i = 0; i < fragments.size(); i++) {
                 AwesomeFragment child = fragments.get(i);
-                getReactBridgeManager().buildRouteGraph(child, children);
+                getReactBridgeManager().buildRouteGraph(child, children, modalContainer);
             }
             Bundle bundle = new Bundle();
             bundle.putString("type", name());
@@ -85,16 +92,17 @@ public class TabNavigator implements Navigator {
     }
 
     @Override
-    public void handleNavigation(@NonNull AwesomeFragment fragment, @NonNull String action,  @NonNull Bundle extras) {
+    public void handleNavigation(@NonNull AwesomeFragment fragment, @NonNull String action,  @NonNull ReadableMap extras) {
         switch (action) {
             case "switchToTab":
+            case "switchTab":
                 TabBarFragment tabBarFragment = fragment.getTabBarFragment();
                 if (tabBarFragment != null) {
                     AwesomeFragment presented = tabBarFragment.getPresentedFragment();
                     if (presented != null) {
                         presented.dismissFragment();
                     }
-                    int index = (int) extras.getDouble("index");
+                    int index = extras.getInt("index");
                     tabBarFragment.setSelectedIndex(index);
                 }
                 break;

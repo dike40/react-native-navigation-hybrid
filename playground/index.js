@@ -24,12 +24,13 @@ import StatusBarColor from './src/StatusBarColor';
 import Transparent from './src/Transparent';
 import HUDTest from './src/HUDText';
 import ReactModal from './src/ReactModal';
+import StatusBarHidden from './src/StatusBarHidden';
 
 Garden.setStyle({
   topBarStyle: 'dark-content',
   titleTextSize: 17,
   // statusBarColor: '#0000FF',
-  // topBarColor: '#F0FFFFFF',
+  topBarColor: '#FFFFFF',
 
   swipeBackEnabledAndroid: true,
   topBarTintColor: '#000000',
@@ -44,13 +45,13 @@ Garden.setStyle({
   // hideBackTitle: true,
   elevation: 1,
 
-  bottomBarColor: '#FFFFFF',
-  //bottomBarShadowImage: {
-  //color: '#ff0000',
-  // 	image: Image.resolveAssetSource(require('./src/images/divider.png'))
-  //},
-  // bottomBarButtonItemActiveColor: '#00FF00'
-  bottomBarButtonItemInactiveColor: '#CCCCCC',
+  tabBarColor: '#FFFFFF',
+  tabBarShadowImage: {
+    // color: '#DDDDDD',
+    image: Image.resolveAssetSource(require('./src/images/divider.png')),
+  },
+  //tabBarItemColor: '#CCCCCC',
+  //tabBarSelectedItemColor: '#00ff00',
 });
 
 function screenWrapper(screenProvider) {
@@ -98,6 +99,7 @@ ReactRegistry.registerComponent('TopBarColor', () => TopBarColor, {
 ReactRegistry.registerComponent('TopBarTitleView', () => TopBarTitleView);
 ReactRegistry.registerComponent('CustomTitleView', () => CustomTitleView);
 ReactRegistry.registerComponent('StatusBarColor', () => StatusBarColor);
+ReactRegistry.registerComponent('StatusBarHidden', () => StatusBarHidden);
 ReactRegistry.registerComponent('TopBarStyle', () => TopBarStyle);
 
 ReactRegistry.registerComponent('Transparent', () => Transparent);
@@ -106,4 +108,39 @@ ReactRegistry.registerComponent('ReactModal', () => ReactModal);
 
 ReactRegistry.endRegisterComponent();
 
+<<<<<<< HEAD
 // 在原生端启动页面，不需要调用 Navigation.setRoot
+=======
+Navigator.setRoot(
+  {
+    drawer: [
+      {
+        tabs: [
+          {
+            stack: {
+              screen: { moduleName: 'Navigation' },
+            },
+          },
+          {
+            stack: {
+              screen: { moduleName: 'Options' },
+            },
+          },
+        ],
+      },
+      {
+        screen: { moduleName: 'Menu' },
+      },
+    ],
+    options: {
+      maxDrawerWidth: 280,
+      minDrawerMargin: 64,
+    },
+  },
+  true
+);
+
+Navigator.setInterceptor((action, from, to, extras) => {
+  console.info(`action:${action} from:${from} to:${to}`);
+});
+>>>>>>> master

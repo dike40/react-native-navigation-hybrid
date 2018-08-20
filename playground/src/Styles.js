@@ -8,10 +8,6 @@ export default StyleSheet.create({
     paddingTop: 16,
   },
 
-  safeArea: {
-    flex: 1,
-  },
-
   transparent: {
     width: 200,
     height: 120,
@@ -34,33 +30,6 @@ export default StyleSheet.create({
   buttonTextDisable: {
     backgroundColor: 'transparent',
     color: '#d1d1d1',
-  },
-
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0, 0.5)',
-  },
-
-  modalContent: {
-    backgroundColor: 'white',
-    padding: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 4,
-    width: 320,
-    borderColor: 'rgba(0, 0, 0, 0.3)',
-  },
-
-  modalButton: {
-    backgroundColor: 'lightblue',
-    padding: 12,
-    margin: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 4,
-    borderColor: 'rgba(0, 0, 0, 0.1)',
   },
 
   result: {
@@ -88,11 +57,5 @@ export default StyleSheet.create({
     fontSize: 17,
     textAlign: 'center',
     margin: 8,
-  },
-
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
   },
 });

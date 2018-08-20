@@ -1,9 +1,10 @@
-package com.navigationhybrid.router;
+package com.navigationhybrid.navigator;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReadableMap;
 import com.navigationhybrid.HybridFragment;
 import com.navigationhybrid.ReactBridgeManager;
@@ -20,7 +21,7 @@ import me.listenzz.navigation.TabBarFragment;
 
 public class StackNavigator implements Navigator {
 
-    private List<String> supportActions = Arrays.asList("push", "pop", "popTo", "popToRoot", "replace", "replaceToRoot");
+    private List<String> supportActions = Arrays.asList("push", "pushLayout", "pop", "popTo", "popToRoot", "replace", "replaceToRoot");
 
     @Override
     public String name() {
@@ -39,6 +40,9 @@ public class StackNavigator implements Navigator {
             ReadableMap stack = layout.getMap(name());
             AwesomeFragment fragment = getReactBridgeManager().createFragment(stack);
             if (fragment != null) {
+                if (layout.hasKey("options")) {
+                    Bundle bundle = Arguments.toBundle(layout.getMap("options"));
+                }
                 ReactNavigationFragment reactNavigationFragment = new ReactNavigationFragment();
                 reactNavigationFragment.setRootFragment(fragment);
                 return reactNavigationFragment;
@@ -50,14 +54,16 @@ public class StackNavigator implements Navigator {
     }
 
     @Override
-    public boolean buildRouteGraph(AwesomeFragment fragment, ArrayList<Bundle> graph) {
+    public boolean buildRouteGraph(AwesomeFragment fragment, ArrayList<Bundle> graph, ArrayList<Bundle> modalContainer) {
         if (fragment instanceof NavigationFragment) {
             NavigationFragment stack = (NavigationFragment) fragment;
             ArrayList<Bundle> children = new ArrayList<>();
             List<AwesomeFragment> fragments = stack.getChildFragmentsAtAddedList();
             for (int i = 0; i < fragments.size(); i++) {
                 AwesomeFragment child = fragments.get(i);
-                getReactBridgeManager().buildRouteGraph(child, children);
+                if (!child.getShowsDialog()) {
+                    getReactBridgeManager().buildRouteGraph(child, children, modalContainer);
+                }
             }
             Bundle bundle = new Bundle();
             bundle.putString("type", name());
@@ -78,16 +84,28 @@ public class StackNavigator implements Navigator {
     }
 
     @Override
-    public void handleNavigation(@NonNull AwesomeFragment fragment, @NonNull String action,  @NonNull Bundle extras) {
+    public void handleNavigation(@NonNull AwesomeFragment fragment, @NonNull String action,  @NonNull ReadableMap extras) {
         NavigationFragment navigationFragment = getNavigationFragment(fragment);
-        if (navigationFragment != null) {
+        if (navigationFragment == null) {
+            return;
+        }
+
+        AwesomeFragment target = null;
+        if (extras.hasKey("moduleName")) {
             String moduleName = extras.getString("moduleName");
-            AwesomeFragment target = null;
             if (moduleName != null) {
-                Bundle props = extras.getBundle("props");
-                Bundle options = extras.getBundle("options");
+                Bundle props = null;
+                Bundle options = null;
+                if (extras.hasKey("props")) {
+                    props = Arguments.toBundle(extras.getMap("props"));
+                }
+                if (extras.hasKey("options")) {
+                    options = Arguments.toBundle(extras.getMap("options"));
+                }
                 target = getReactBridgeManager().createFragment(moduleName, props, options);
             }
+        }
+
             switch (action) {
                 case "push":
                     if (target != null) {
@@ -117,8 +135,15 @@ public class StackNavigator implements Navigator {
                         navigationFragment.replaceToRootFragment(target);
                     }
                     break;
+                case "pushLayout":
+                    ReadableMap layout = extras.getMap("layout");
+                    target = getReactBridgeManager().createFragment(layout);
+                    if (target != null) {
+                        navigationFragment.pushFragment(target);
+                    }
+                    break;
             }
-        }
+
     }
 
     private NavigationFragment getNavigationFragment(AwesomeFragment fragment) {

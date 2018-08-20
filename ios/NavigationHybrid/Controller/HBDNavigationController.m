@@ -40,8 +40,12 @@
     if (self = [super initWithNavigationBarClass:[HBDNavigationBar class] toolbarClass:nil]) {
         if ([rootViewController isKindOfClass:[HBDViewController class]]) {
             HBDViewController *root = (HBDViewController *)rootViewController;
+            self.tabBarItem = root.tabBarItem;
+            root.tabBarItem = nil;
             NSDictionary *tabItem = root.options[@"tabItem"];
-            [self configTabItemWithDict:tabItem];
+            if (tabItem) {
+                self.hidesBottomBarWhenPushed = [tabItem[@"hideTabBarWhenPush"] boolValue];
+            }
         }
         self.viewControllers = @[ rootViewController ];
     }
@@ -50,6 +54,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    self.definesPresentationContext = NO;
     self.interactivePopGestureRecognizer.delegate = self;
     [self.interactivePopGestureRecognizer addTarget:self action:@selector(handlePopGesture:)];
     self.delegate = self;
@@ -79,10 +84,25 @@
 - (BOOL)navigationBar:(UINavigationBar *)navigationBar shouldPopItem:(UINavigationItem *)item {
     if (self.viewControllers.count > 1 && self.topViewController.navigationItem == item ) {
         if (!self.topViewController.hbd_backInteractive) {
+            [self resetSubviewsInNavBar:self.navigationBar];
             return NO;
         }
     }
     return [super navigationBar:navigationBar shouldPopItem:item];
+}
+
+- (void)resetSubviewsInNavBar:(UINavigationBar *)navBar {
+    if (@available(iOS 11, *)) {
+    } else {
+        // Workaround for >= iOS7.1. Thanks to @boliva - http://stackoverflow.com/posts/comments/34452906
+        [navBar.subviews enumerateObjectsUsingBlock:^(__kindof UIView * _Nonnull subview, NSUInteger idx, BOOL * _Nonnull stop) {
+            if (subview.alpha < 1.0) {
+                [UIView animateWithDuration:.25 animations:^{
+                    subview.alpha = 1.0;
+                }];
+            }
+        }];
+    }
 }
 
 - (void)navigationController:(UINavigationController *)navigationController willShowViewController:(UIViewController *)viewController animated:(BOOL)animated {
@@ -167,6 +187,7 @@
             HBDReactViewController *reactVC = (HBDReactViewController *)from;
             RCTEventEmitter *emitter = [[HBDReactBridgeManager sharedInstance].bridge moduleForName:@"NavigationHybrid"];
             [emitter sendEventWithName:@"ON_COMPONENT_BACK" body:@{ @"sceneId": reactVC.sceneId }];
+            [viewController didReceiveResultCode:from.resultCode resultData:from.resultData requestCode:0];
         }
         self.poppingViewController = nil;
     }
@@ -270,24 +291,6 @@
 
 - (void)updateNavigationBarShadowImageAlphaForViewController:(UIViewController *)vc {
     self.navigationBar.shadowImageView.alpha = vc.hbd_barShadowAlpha;
-}
-
-- (void)configTabItemWithDict:(NSDictionary *)tabItem {
-    if (tabItem) {
-        UITabBarItem *tabBarItem = [[UITabBarItem alloc] init];
-        tabBarItem.title = tabItem[@"title"];
-        
-        NSDictionary *inactiveIcon = tabItem[@"inactiveIcon"];
-        if (inactiveIcon) {
-            tabBarItem.selectedImage = [[HBDUtils UIImage:tabItem[@"icon"]] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
-            tabBarItem.image = [[HBDUtils UIImage:inactiveIcon] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
-        } else {
-            tabBarItem.image = [HBDUtils UIImage:tabItem[@"icon"]];
-        }
-        
-        self.tabBarItem = tabBarItem;
-        self.hidesBottomBarWhenPushed = [tabItem[@"hideTabBarWhenPush"] boolValue];
-    }
 }
 
 UIColor* blendColor(UIColor *from, UIColor *to, float percent) {

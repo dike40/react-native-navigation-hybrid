@@ -83,7 +83,7 @@ public class Garden {
             }
         }
 
-        String screenColor = options.getString("screenColor");
+        String screenColor = options.getString("screenBackgroundColor");
         if (!TextUtils.isEmpty(screenColor)) {
             style.setScreenBackgroundColor(Color.parseColor(screenColor));
         }
@@ -98,6 +98,9 @@ public class Garden {
         if (!TextUtils.isEmpty(statusBarColor)) {
             style.setStatusBarColor(Color.parseColor(statusBarColor));
         }
+
+        boolean statusBarHidden = options.getBoolean("statusBarHidden");
+        style.setStatusBarHidden(statusBarHidden);
 
         String topBarTintColor = options.getString("topBarTintColor");
         if (!TextUtils.isEmpty(topBarTintColor)) {
@@ -218,6 +221,11 @@ public class Garden {
 
     void setStatusBarStyle(BarStyle barStyle) {
         style.setStatusBarStyle(barStyle);
+        fragment.setNeedsStatusBarAppearanceUpdate();
+    }
+
+    void setStatusBarHidden(boolean hidden) {
+        style.setStatusBarHidden(hidden);
         fragment.setNeedsStatusBarAppearanceUpdate();
     }
 

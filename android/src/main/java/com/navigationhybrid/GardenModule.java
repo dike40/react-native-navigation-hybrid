@@ -160,6 +160,25 @@ public class GardenModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+    public void setStatusBarHidden(final String sceneId, final ReadableMap readableMap) {
+        Log.i(TAG, "setStatusBarHidden:" + readableMap);
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                HybridFragment fragment = findFragmentBySceneId(sceneId);
+                if (fragment != null && fragment.getView() != null) {
+                    Bundle options = fragment.getOptions();
+                    if (readableMap.hasKey("statusBarHidden")) {
+                        boolean hidden = readableMap.getBoolean("statusBarHidden");
+                        options.putBoolean("statusBarHidden", hidden);
+                        fragment.getGarden().setStatusBarHidden(hidden);
+                    }
+                }
+            }
+        });
+    }
+
+    @ReactMethod
     public void setTopBarStyle(final String sceneId, final ReadableMap readableMap) {
         handler.post(new Runnable() {
             @Override
@@ -239,18 +258,18 @@ public class GardenModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void setBottomBarColor(final String sceneId, final ReadableMap readableMap) {
+    public void setTabBarColor(final String sceneId, final ReadableMap readableMap) {
         handler.post(new Runnable() {
             @Override
             public void run() {
-                if (readableMap.hasKey("bottomBarColor")) {
-                    String bottomBarColor = readableMap.getString("bottomBarColor");
+                if (readableMap.hasKey("tabBarColor")) {
+                    String tabBarColor = readableMap.getString("tabBarColor");
                     HybridFragment fragment = findFragmentBySceneId(sceneId);
                     if (fragment != null && fragment.getView() != null) {
                         TabBarFragment tabBarFragment = fragment.getTabBarFragment();
                         if (tabBarFragment != null) {
                             TabBar tabBar = tabBarFragment.getTabBar();
-                            tabBar.setBarBackgroundColor(bottomBarColor);
+                            tabBar.setBarBackgroundColor(tabBarColor);
                             tabBar.initialise();
                         }
                     }
@@ -260,7 +279,7 @@ public class GardenModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void replaceTabIcon(final String sceneId, final int index, final ReadableMap icon, final ReadableMap inactiveIcon) {
+    public void replaceTabIcon(final String sceneId, final int index, final ReadableMap icon, final ReadableMap selectedIcon) {
         handler.post(new Runnable() {
             @Override
             public void run() {
@@ -273,12 +292,14 @@ public class GardenModule extends ReactContextBaseJavaModule {
                         if (drawable == null) {
                             return;
                         }
-                        Drawable inactiveDrawable = drawableFromReadableMap(tabBar.getContext(), inactiveIcon);
-                        tabBar.setTabIcon(index, drawable, inactiveDrawable);
+                        Drawable selectedDrawable = drawableFromReadableMap(tabBar.getContext(), selectedIcon);
+                        tabBar.setTabIcon(index, drawable, selectedDrawable);
                         AwesomeFragment f = tabBarFragment.getChildFragments().get(index);
                         f.getTabBarItem().iconUri = icon.getString("uri");
-                        if (inactiveIcon != null && inactiveIcon.hasKey("uri")) {
-                            f.getTabBarItem().inactiveIconUri = inactiveIcon.getString("uri");
+                        if (selectedIcon != null && selectedIcon.hasKey("uri")) {
+                            tabBar.setTabIcon(index, selectedDrawable, drawable);
+                        } else {
+                            tabBar.setTabIcon(index, drawable, null);
                         }
                     }
                 }

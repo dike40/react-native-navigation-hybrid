@@ -34,6 +34,10 @@ export default class Garden {
     GardenModule.setStatusBarColor(this.sceneId, item);
   }
 
+  setStatusBarHidden(hidden = true) {
+    GardenModule.setStatusBarHidden(this.sceneId, { statusBarHidden: hidden });
+  }
+
   setLeftBarButtonItem(item) {
     if (this.options.leftBarButtonItem) {
       this.options.leftBarButtonItem = { ...this.options.leftBarButtonItem, ...item };
@@ -85,8 +89,8 @@ export default class Garden {
     GardenModule.setTopBarShadowHidden(this.sceneId, item);
   }
 
-  setBottomBarColor(item) {
-    GardenModule.setBottomBarColor(this.sceneId, item);
+  setTabBarColor(item) {
+    GardenModule.setTabBarColor(this.sceneId, item);
   }
 
   replaceTabIcon(index, icon, inactiveIcon) {

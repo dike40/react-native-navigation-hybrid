@@ -1,4 +1,4 @@
-package com.navigationhybrid.router;
+package com.navigationhybrid.navigator;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -47,8 +47,8 @@ public class DrawerNavigator implements Navigator {
                 ReactDrawerFragment drawerFragment = new ReactDrawerFragment();
                 drawerFragment.setMenuFragment(menuFragment);
                 drawerFragment.setContentFragment(contentFragment);
-                if (menu.hasKey("options")) {
-                    ReadableMap options = menu.getMap("options");
+                if (layout.hasKey("options")) {
+                    ReadableMap options = layout.getMap("options");
                     if (options.hasKey("maxDrawerWidth")) {
                         int maxDrawerWidth = options.getInt("maxDrawerWidth");
                         drawerFragment.setMaxDrawerWidth(maxDrawerWidth);
@@ -57,6 +57,11 @@ public class DrawerNavigator implements Navigator {
                     if (options.hasKey("minDrawerMargin")) {
                         int minDrawerMargin = options.getInt("minDrawerMargin");
                         drawerFragment.setMinDrawerMargin(minDrawerMargin);
+                    }
+
+                    if (options.hasKey("menuInteractive")) {
+                        boolean interactive = options.getBoolean("menuInteractive");
+                        drawerFragment.setMenuInteractive(interactive);
                     }
                 }
                 return drawerFragment;
@@ -68,12 +73,12 @@ public class DrawerNavigator implements Navigator {
     }
 
     @Override
-    public boolean buildRouteGraph(AwesomeFragment fragment, ArrayList<Bundle> graph) {
+    public boolean buildRouteGraph(AwesomeFragment fragment, ArrayList<Bundle> graph, ArrayList<Bundle> modalContainer) {
         if (fragment instanceof DrawerFragment) {
             DrawerFragment drawer = (DrawerFragment) fragment;
             ArrayList<Bundle> children = new ArrayList<>();
-            getReactBridgeManager().buildRouteGraph(drawer.getContentFragment(), children);
-            getReactBridgeManager().buildRouteGraph(drawer.getMenuFragment(), children);
+            getReactBridgeManager().buildRouteGraph(drawer.getContentFragment(), children, modalContainer);
+            getReactBridgeManager().buildRouteGraph(drawer.getMenuFragment(), children, modalContainer);
             Bundle bundle = new Bundle();
             bundle.putString("type", name());
             bundle.putParcelableArrayList(name(), children);
@@ -102,7 +107,7 @@ public class DrawerNavigator implements Navigator {
     }
 
     @Override
-    public void handleNavigation(@NonNull AwesomeFragment fragment, @NonNull String action,  @NonNull Bundle extras) {
+    public void handleNavigation(@NonNull AwesomeFragment fragment, @NonNull String action,  @NonNull ReadableMap extras) {
         DrawerFragment drawerFragment = fragment.getDrawerFragment();
         if (drawerFragment == null) {
             return;

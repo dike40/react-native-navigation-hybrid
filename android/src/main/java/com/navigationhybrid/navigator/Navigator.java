@@ -1,4 +1,4 @@
-package com.navigationhybrid.router;
+package com.navigationhybrid.navigator;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -21,10 +21,10 @@ public interface Navigator {
     @Nullable
     AwesomeFragment createFragment(ReadableMap layout);
 
-    boolean buildRouteGraph(AwesomeFragment fragment, ArrayList<Bundle> graph);
+    boolean buildRouteGraph(AwesomeFragment fragment, ArrayList<Bundle> graph, ArrayList<Bundle> modalContainer);
 
     HybridFragment primaryChildFragment(@NonNull AwesomeFragment fragment);
 
-    void handleNavigation(@NonNull AwesomeFragment fragment, @NonNull String action,  @NonNull Bundle extras);
+    void handleNavigation(@NonNull AwesomeFragment fragment, @NonNull String action,  @NonNull ReadableMap extras);
 
 }

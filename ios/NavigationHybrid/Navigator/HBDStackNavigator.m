@@ -18,13 +18,16 @@
 }
 
 - (NSArray<NSString *> *)supportActions {
-    return @[@"push", @"pop", @"popTo", @"popToRoot", @"replace", @"replaceToRoot"];
+    return @[@"push", @"pushLayout", @"pop", @"popTo", @"popToRoot", @"replace", @"replaceToRoot"];
 }
 
 - (UIViewController *)createViewControllerWithLayout:(NSDictionary *)layout {
     NSDictionary *stack = [layout objectForKey:self.name];
     if (stack) {
         UIViewController *root = [[HBDReactBridgeManager sharedInstance] controllerWithLayout:stack];
+        NSDictionary *options = [layout objectForKey:@"options"];
+        if (options) {
+        }
         if (root) {
             return [[HBDNavigationController alloc] initWithRootViewController:root];
         }
@@ -75,12 +78,7 @@
             [nav pushViewController:target animated:animated];
         }
     } else if ([action isEqualToString:@"pop"]) {
-        NSArray *children = nav.childViewControllers;
-        NSUInteger index = [children indexOfObject:vc];
-        if (index > 0) {
-            HBDViewController *target = children[index -1];
-            [target didReceiveResultCode:vc.resultCode resultData:vc.resultData requestCode:0];
-        }
+        // HBDNavigationController 中处理了返回结果
         [nav popViewControllerAnimated:animated];
     } else if ([action isEqualToString:@"popTo"]) {
         NSArray *children = nav.childViewControllers;
@@ -112,6 +110,10 @@
         [nav replaceViewController:target animated:YES];
     } else if ([action isEqualToString:@"replaceToRoot"]) {
         [nav replaceToRootViewController:target animated:YES];
+    } else if ([action isEqualToString:@"pushLayout"]) {
+        NSDictionary *layout = [extras objectForKey:@"layout"];
+        UIViewController *vc = [[HBDReactBridgeManager sharedInstance] controllerWithLayout:layout];
+        [nav pushViewController:vc animated:animated];
     }
 }
 
