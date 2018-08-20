@@ -108,39 +108,4 @@ ReactRegistry.registerComponent('ReactModal', () => ReactModal);
 
 ReactRegistry.endRegisterComponent();
 
-<<<<<<< HEAD
 // 在原生端启动页面，不需要调用 Navigation.setRoot
-=======
-Navigator.setRoot(
-  {
-    drawer: [
-      {
-        tabs: [
-          {
-            stack: {
-              screen: { moduleName: 'Navigation' },
-            },
-          },
-          {
-            stack: {
-              screen: { moduleName: 'Options' },
-            },
-          },
-        ],
-      },
-      {
-        screen: { moduleName: 'Menu' },
-      },
-    ],
-    options: {
-      maxDrawerWidth: 280,
-      minDrawerMargin: 64,
-    },
-  },
-  true
-);
-
-Navigator.setInterceptor((action, from, to, extras) => {
-  console.info(`action:${action} from:${from} to:${to}`);
-});
->>>>>>> master

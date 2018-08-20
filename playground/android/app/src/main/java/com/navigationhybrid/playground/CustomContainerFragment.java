@@ -22,27 +22,27 @@ public class CustomContainerFragment extends AwesomeFragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         if (savedInstanceState != null) {
-            containerFragment = (AwesomeFragment) getChildFragmentManager().findFragmentById(R.id.container);
-            backgroundFragment = (AwesomeFragment) getChildFragmentManager().findFragmentById(R.id.background);
+            contentFragment = (AwesomeFragment) getChildFragmentManager().findFragmentById(R.id.content);
+            overlayFragment = (AwesomeFragment) getChildFragmentManager().findFragmentById(R.id.overlay);
         } else {
-            if (backgroundFragment == null || containerFragment == null) {
-                throw new IllegalArgumentException("必须指定 backgroundFragment 以及 containerFragment");
+            if (overlayFragment == null || contentFragment == null) {
+                throw new IllegalArgumentException("必须指定 overlayFragment 以及 contentFragment");
             } else {
-                FragmentHelper.addFragmentToAddedList(getChildFragmentManager(), R.id.background, backgroundFragment, false);
-                FragmentHelper.addFragmentToAddedList(getChildFragmentManager(), R.id.container, containerFragment, true);
+                FragmentHelper.addFragmentToAddedList(getChildFragmentManager(), R.id.content, contentFragment, true);
+                FragmentHelper.addFragmentToAddedList(getChildFragmentManager(), R.id.overlay, overlayFragment, false);
             }
         }
     }
 
-    private AwesomeFragment backgroundFragment;
+    private AwesomeFragment overlayFragment;
 
-    private AwesomeFragment containerFragment;
+    private AwesomeFragment contentFragment;
 
-    public void setBackgroundFragment(@NonNull final AwesomeFragment backgroundFragment) {
-        this.backgroundFragment = backgroundFragment;
+    public void setOverlayFragment(@NonNull final AwesomeFragment overlayFragment) {
+        this.overlayFragment = overlayFragment;
     }
 
-    public void setContainerFragment(@NonNull final AwesomeFragment containerFragment) {
-        this.containerFragment = containerFragment;
+    public void setContentFragment(@NonNull final AwesomeFragment contentFragment) {
+        this.contentFragment = contentFragment;
     }
 }
